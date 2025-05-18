@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ selectedUser, setSelectedUser }) => {
     const navigate = useNavigate();
-
+    console.log("Selected User in Sidebar:", selectedUser);
     return (
         <div className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${selectedUser ? 'max-md:hidden' : ''}`}>
             {/* Logo and Menu */}
