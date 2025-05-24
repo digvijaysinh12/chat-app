@@ -1,3 +1,4 @@
+import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
 
 
@@ -22,8 +23,11 @@ export const signup = async(req,res) => {
  
         })
 
-        const token = 
+        const token = generateToken(newUser._id)
+        
+        res.json({success:true, userData: newUser, token, message:"Account created Successfully"})
     }catch(error){
-        console.log(error);
+        console.log(error.message);
+        res.json({success:false, message:error.message})
     }
 }
