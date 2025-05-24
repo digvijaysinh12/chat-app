@@ -16,7 +16,8 @@ app.use(express.json({limit: "4mb"}));
 // allow all the URL to connect our backend
 app.use(cors());
 
-app.use("/api/status", (req,res)=> res.send("Server is live"))
+app.use("/api/status", (req,res)=> res.send("Server is live"));
+app.use("/api/user/");
 
 
 // Connect to MongoDN
