@@ -5,13 +5,21 @@ import http from "http";
 import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
-
+import { Server } from "socket.io";
 
 //Create Express app and HTTP server
 const app = express();
+
 //We are using this http create server beacause the socket io support this http server
 const server = http.createServer(app)
 
+//Initialize socket.io server
+export const io = new Server(server, {
+    cors: {origin: "*"}
+})
+
+// Store online users
+export const userSocketMap = {};//{userId: socketId}
 
 // Middleware setup
 app.use(express.json({limit: "4mb"}));
