@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import assets from '../assets/assets'
+import { AuthContext } from '../../context/AuthContext';
 
 const LoginPage = () => {
 
@@ -10,25 +11,30 @@ const LoginPage = () => {
   const [bio, setBio] = useState("");
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
 
-  const onSubmitHandler = (event) => {
-    event.preventDefault();
+  const {login} = useContext(AuthContext);
 
-    if (currState === 'Sign up') {
-      if (!isDataSubmitted) {
-        // First step done, show bio field
-        setIsDataSubmitted(true);
-      } else {
-        // Final submission with bio
-        const formData = { fullName, email, password, bio };
-        console.log("Submitted Data: ", formData);
-        // Reset or send to server here
-      }
-    } else {
-      // Handle Login case here
-      const loginData = { email, password };
-      console.log("Login Data: ", loginData);
+const onSubmitHandler = (event) => {
+  event.preventDefault();
+
+  if (currState === 'Sign up') {
+    if (!isDataSubmitted) {
+      // Show the bio field instead of submitting
+      setIsDataSubmitted(true);
+      return;
     }
+
+    // Final signup step with all fields
+    const formData = { fullName, email, password, bio };
+    console.log("Signup Data: ", formData);
+    login('signup', formData);  // only call here
+  } else {
+    // Login submission
+    const loginData = { email, password };
+    console.log("Login Data: ", loginData);
+    login('login', loginData);  // only call here
   }
+}
+
 
   return (
     <div className='min-h-screen bg-cover bg-center flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl'>
