@@ -47,6 +47,18 @@ export const AuthProvider = ({ children }) => {
             toast.error(error.message);
         }
     }
+
+    // Logout function to handle user logout and socket disconnection
+
+    const logout = async() => {
+        localStorage.removeItem("token");
+        setToken(null);
+        setAuthUser(null);
+        setOnlineUsers([]);
+        axios.defaults.headers.common["token"] = null;
+        toast.success("Logged out successfully")
+        socket.disconnect();
+    }
     //Connect socket funtion to handle socket connection and online users updates
     const connectSocket = (userData) =>{
         if(!userData || socket?.connected) return;
