@@ -1,6 +1,7 @@
 import cloudinary from "../lib/cloudinary.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
+import bcrypt from 'bcryptjs'; 
 
 
 
@@ -16,7 +17,7 @@ export const signup = async(req,res) => {
         if(user){
             res.json({success:false,message: "User already exist"});
         }
-        const salt = await bcrypt.getSalt(10);
+        const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password,salt);
 
         const newUser = await User.create({
@@ -28,7 +29,7 @@ export const signup = async(req,res) => {
         
         res.json({success:true, userData: newUser, token, message:"Account created Successfully"})
     }catch(error){
-        console.log(error.message);
+        console.log(error);
         res.json({success:false, message:error.message})
     }
 }
