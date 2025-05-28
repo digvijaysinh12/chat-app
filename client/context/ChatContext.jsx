@@ -39,6 +39,20 @@ export const ChatProvider = ({children}) =>{
             toast.error(error.message);
         }
     }
+
+    // function to send message to selected user
+    const sendMessage = async(messageData) => {
+        try{
+            const {data} = await axios.post(`/api/messages/send/${selectedUser._id}`,messageData);
+            if(data.success){
+                setMessages((prevMessages)=> [...prevMessages, data.newMessage])
+            }else{
+                toast.error(data.message);
+            }
+        }catch(error){
+            toast.error(error.message);
+        }
+    }
     const value = {
 
     }
