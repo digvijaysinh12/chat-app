@@ -78,7 +78,7 @@ const ProfilePage = () => {
 
         <img
           className='max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10'
-          src={assets.logo_icon}
+          src={selectedImg? selectedImg:assets.logo_icon}
           alt='logo'
         />
       </div>
