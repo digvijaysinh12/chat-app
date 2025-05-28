@@ -1,13 +1,24 @@
-import React, { useContext } from 'react';
-import assets, { userDummyData } from '../assets/assets';
+import React, { useContext, useEffect, useState } from 'react';
+import assets from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { ChatContext } from '../../context/chatContext';
 
-const Sidebar = ({ selectedUser, setSelectedUser }) => {
+const Sidebar = () => {
 
-    const{logout} = useContext(AuthContext);
+    const {getUsers, users, selectedUser, setSelectedUser, unSeenMessages, setUnseenMessages} = useContext(ChatContext);
+
+    const{logout, onlineUsers} = useContext(AuthContext);
+
+    const [input, setInput] = useState(false);
+
     const navigate = useNavigate();
-    console.log("Selected User in Sidebar:", selectedUser);
+
+    const filteredUsers = input? users.filter((user)=> user.fullName.toLowerCase().include(input.toLowerCase())) : users;
+
+    useEffect(() => {
+        getUsers();
+    },[onlineUsers])
     return (
         <div className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${selectedUser ? 'max-md:hidden' : ''}`}>
             {/* Logo and Menu */}
@@ -34,7 +45,7 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
                 {/* Search Bar */}
                 <div className="mt-4 flex items-center gap-2 bg-[#282142] px-3 py-2 rounded-md">
                     <img src={assets.search_icon} alt="Search" className="w-4 h-4 opacity-70" />
-                    <input
+                    <input onChange={(e)=>setInput(e.target.value)}
                         type="text"
                         className="bg-transparent border-none outline-none text-white text-sm placeholder-[#c8c8c8] flex-1"
                         placeholder="Search User..."
@@ -44,7 +55,7 @@ const Sidebar = ({ selectedUser, setSelectedUser }) => {
 
             {/* User List */}
             <div className="flex flex-col">
-                {userDummyData.map((user, index) => (
+                {filteredUsers.map((user, index) => (
                     <div
                         key={user._id || index}
                         onClick={() => setSelectedUser(user)}
