@@ -26,16 +26,23 @@ io.on("connection", (socket)=>{
     const userId = socket.handshake.query.userId;
     console.log("User Connected", userId);
 
-    if(userId) userSocketMap[userId] = socket.id;
-
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+    console.log(`✅ User Connected → ID: ${userId}, Socket: ${socket.id}`);
+  } else {
+    console.log("⚠️ Connection attempted without userId");
+  }
     // Emit online users to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-    socket.on("disconnect", ()=>{
-        console.log("User Disconnected", userId);
-        delete userSocketMap[userId];
-        io.emit("getOnlineUsers", Object.keys(userSocketMap))
-    })
+  // Disconnect handler
+  socket.on("disconnect", () => {
+    console.log(`❌ User Disconnected → ID: ${userId}, Socket: ${socket.id}`);
+    if (userId in userSocketMap) {
+      delete userSocketMap[userId];
+      io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    }
+  });
 })
 
 // Middleware setup

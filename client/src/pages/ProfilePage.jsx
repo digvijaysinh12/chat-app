@@ -1,32 +1,54 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import assets from '../assets/assets';
-import {AuthContext} from '../../context/AuthContext';
+import { AuthContext } from '../../context/AuthContext';
 
 const ProfilePage = () => {
-
-  const {authUser, updateProfile} = useContext(AuthContext);
+  const { authUser, updateProfile } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [selectedImg, setSelectedImg] = useState(null);
-  const navigate = useNavigate();
-  const [name, setName] = useState("Martin Johnson");
-  const [bio, setBio] = useState("Hi Everyone, I am Using QuickChat");
+  const [previewImg, setPreviewImg] = useState(null);
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+
+  // Set initial profile info from authUser
+  useEffect(() => {
+    if (authUser) {
+      setName(authUser.fullName || "");
+      setBio(authUser.bio || "");
+    }
+  }, [authUser]);
+
+  // Generate preview image
+  useEffect(() => {
+    if (!selectedImg) {
+      setPreviewImg(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(selectedImg);
+    setPreviewImg(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedImg]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if(!selectedImg){
-      await updateProfile({fullName: name, bio});
+
+    if (!selectedImg) {
+      await updateProfile({ fullName: name, bio });
       navigate('/');
       return;
     }
 
     const reader = new FileReader();
     reader.readAsDataURL(selectedImg);
-    reader.onload = async() => {
+    reader.onload = async () => {
       const base64Image = reader.result;
-      await updateProfile({profilePic: base64Image, fullName : name, bio})
+      await updateProfile({ profilePic: base64Image, fullName: name, bio });
       navigate('/');
-    }
+    };
   };
 
   return (
@@ -44,9 +66,9 @@ const ProfilePage = () => {
               onChange={(e) => setSelectedImg(e.target.files[0])}
             />
             <img
-              src={selectedImg ? URL.createObjectURL(selectedImg) : assets.avatar_icon}
+              src={previewImg || authUser?.profilePic || assets.avatar_icon}
               alt='avatar'
-              className={`w-12 h-12 object-cover ${selectedImg ? 'rounded-full' : ''}`}
+              className='w-12 h-12 object-cover rounded-full'
             />
             Upload profile image
           </label>
@@ -77,9 +99,9 @@ const ProfilePage = () => {
         </form>
 
         <img
-          className='max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10'
-          src={selectedImg? selectedImg:assets.logo_icon}
-          alt='logo'
+          className='max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 object-cover'
+          src={previewImg || authUser?.profilePic || assets.logo_icon}
+          alt='profile-preview'
         />
       </div>
     </div>
