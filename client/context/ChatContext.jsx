@@ -15,14 +15,11 @@ export const ChatProvider = ({ children }) => {
   // Get all users for sidebar
   const getUsers = async () => {
     try {
-      console.log("Fetching users...");
       const { data } = await axios.get("/api/messages/users");
-      console.log("Users response:", data);
 
       if (data.success) {
         setUsers(data.users);
         setUnseenMessages(data.unseenMessages);
-        console.log("Users set:", data.users);
         console.log("Unseen messages set:", data.unseenMessages);
       }
     } catch (error) {
@@ -38,6 +35,7 @@ export const ChatProvider = ({ children }) => {
       const { data } = await axios.get(`/api/messages/${userId}`);
       if (data.success) {
         setMessages(data.messages);
+        setUnseenMessages();
         console.log("Messages received:", data.messages);
       }
     } catch (error) {
@@ -87,11 +85,11 @@ export const ChatProvider = ({ children }) => {
         setMessages((prevMessages) => [...prevMessages, newMessage]);
         axios.put(`/api/messages/mark/${newMessage._id}`);
       } else {
-        setUnseenMessages((prev) => ({
-          ...prev,
-          [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1
-        }));
-        console.log("Updated unseenMessages:", unseenMessages);
+        setUnseenMessages((prev) => {
+          const updated = { ...prev, [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1 };
+          return updated;
+        });
+
       }
     });
   };
@@ -120,6 +118,7 @@ export const ChatProvider = ({ children }) => {
     setSelectedUser,
     unseenMessages,
     setUnseenMessages,
+    getMessages,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
