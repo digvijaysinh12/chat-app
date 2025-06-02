@@ -20,7 +20,7 @@ export const ChatProvider = ({ children }) => {
       if (data.success) {
         setUsers(data.users);
         setUnseenMessages(data.unseenMessages);
-        console.log("Unseen messages set:", data.unseenMessages);
+        //console.log("Unseen messages set:", data.unseenMessages);
       }
     } catch (error) {
       console.log("Error in getUsers:", error.message);
@@ -36,7 +36,7 @@ export const ChatProvider = ({ children }) => {
       if (data.success) {
         setMessages(data.messages);
         setUnseenMessages();
-        console.log("Messages received:", data.messages);
+        //console.log("Messages received:", data.messages);
       }
     } catch (error) {
       console.log("Error in getMessages:", error.message);
@@ -59,7 +59,7 @@ export const ChatProvider = ({ children }) => {
       );
       if (data.success) {
         setMessages((prevMessages) => [...prevMessages, data.newMessage]);
-        console.log("Message sent:", data.newMessage);
+        //console.log("Message sent:", data.newMessage);
       } else {
         toast.error(data.message);
       }
@@ -72,13 +72,13 @@ export const ChatProvider = ({ children }) => {
   // Subscribe to incoming messages
   const subscribeToMessages = () => {
     if (!socket) {
-      console.log("Socket not connected.");
+      //console.log("Socket not connected.");
       return;
     }
 
     console.log("Subscribing to socket messages...");
     socket.on("newMessage", (newMessage) => {
-      console.log("New message received:", newMessage);
+      //console.log("New message received:", newMessage);
 
       if (selectedUser && newMessage.senderId === selectedUser._id) {
         newMessage.seen = true;
@@ -97,13 +97,13 @@ export const ChatProvider = ({ children }) => {
   // Unsubscribe from socket messages
   const unsubscribeFromMessages = () => {
     if (socket) {
-      console.log("Unsubscribing from socket messages...");
+      //console.log("Unsubscribing from socket messages...");
       socket.off("newMessage");
     }
   };
 
   useEffect(() => {
-    console.log("useEffect triggered. Socket:", socket, "Selected user:", selectedUser);
+    //console.log("useEffect triggered. Socket:", socket, "Selected user:", selectedUser);
     subscribeToMessages();
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
