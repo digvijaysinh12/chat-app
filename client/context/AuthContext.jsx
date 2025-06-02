@@ -17,17 +17,17 @@ export const AuthProvider = ({ children }) => {
     // Check if user is authenticated
     const checkAuth = async () => {
         try {
-            console.log("Checking user authentication...");
+            //console.log("Checking user authentication...");
             const { data } = await axios.get("/api/auth/check");
-            console.log("Auth check response:", data);
+            //console.log("Auth check response:", data);
 
             if (data.success) {
                 setAuthUser(data.user);
-                console.log("User authenticated:", data.user);
+                //console.log("User authenticated:", data.user);
                 connectSocket(data.user);
             }
         } catch (error) {
-            console.error("Auth check error:", error.message);
+            //console.error("Auth check error:", error.message);
             toast.error(error.message);
         }
     };
@@ -35,9 +35,9 @@ export const AuthProvider = ({ children }) => {
     // Login user
     const login = async (state, credentials) => {
         try {
-            console.log(`Attempting ${state} with credentials`, credentials);
+            //console.log(`Attempting ${state} with credentials`, credentials);
             const { data } = await axios.post(`/api/auth/${state}`, credentials);
-            console.log(`${state} response:`, data);
+            //console.log(`${state} response:`, data);
 
             if (data.success) {
                 setAuthUser(data.userData);
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
         axios.defaults.headers.common["token"] = null;
         if (socket) {
             socket.disconnect();
-            console.log("Socket disconnected.");
+            //console.log("Socket disconnected.");
         }
         toast.success("Logged out successfully");
     };
@@ -73,9 +73,9 @@ export const AuthProvider = ({ children }) => {
     // Update profile
     const updateProfile = async (body) => {
         try {
-            console.log("Updating profile with body:", body);
+            //console.log("Updating profile with body:", body);
             const { data } = await axios.put("/api/auth/update-profile", body);
-            console.log("Profile update response:", data);
+            //console.log("Profile update response:", data);
 
             if (data.success) {
                 setAuthUser(data.user);
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        console.log("Connecting socket for user:", userData._id);
+        //console.log("Connecting socket for user:", userData._id);
         const newSocket = io(backendUrl, {
             query: { userId: userData._id }
         });
@@ -102,16 +102,16 @@ export const AuthProvider = ({ children }) => {
         setSocket(newSocket);
 
         newSocket.on("connect", () => {
-            console.log("Socket connected with ID:", newSocket.id);
+            //console.log("Socket connected with ID:", newSocket.id);
         });
 
         newSocket.on("getOnlineUsers", (userIds) => {
-            console.log("Online users:", userIds);
+            //console.log("Online users:", userIds);
             setOnlineUsers(userIds);
         });
 
         newSocket.on("disconnect", () => {
-            console.log("Socket disconnected.");
+            //console.log("Socket disconnected.");
         });
     };
 
@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         if (token) {
             axios.defaults.headers.common["token"] = token;
-            console.log("Token set in headers:", token);
+            //console.log("Token set in headers:", token);
         }
         checkAuth();
     }, []);
