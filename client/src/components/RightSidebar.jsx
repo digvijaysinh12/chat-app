@@ -14,7 +14,7 @@ const RightSidebar = () => {
     setMsgImages(
       messages.filter(msg => msg.image).map(msg=>msg.image)
     )
-  })
+  },[messages])
  
   return selectedUser && (
     <div className="bg-[#8185B2]/10 text-white w-full relative overflow-y-auto max-md:hidden">
