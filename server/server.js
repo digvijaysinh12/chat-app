@@ -21,6 +21,11 @@ export const io = new Server(server, {
 // Store online users
 export const userSocketMap = {};//{userId: socketId}
 
+// Helper function to get socketId by userId
+export const getUserSocketId = (userId) => {
+  return userSocketMap[userId];
+};
+
 // Socket.io connection handler
 io.on("connection", (socket)=>{
     const userId = socket.handshake.query.userId;
@@ -28,6 +33,7 @@ io.on("connection", (socket)=>{
 
   if (userId) {
     userSocketMap[userId] = socket.id;
+    socket.userId = userId;
     console.log(`✅ User Connected → ID: ${userId}, Socket: ${socket.id}`);
   } else {
     console.log("⚠️ Connection attempted without userId");
@@ -35,6 +41,15 @@ io.on("connection", (socket)=>{
     // Emit online users to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
+    socket.on("typing", ({ toUserId, isTyping}) => {
+      const receiverSocketId = getUserSocketId(toUserId);
+      if(receiverSocketId){
+        io.to(receiverSocketId).emit("typing", {
+          fromUserId: socket.userId,
+          isTyping,
+        })
+      }
+    })
   // Disconnect handler
   socket.on("disconnect", () => {
     console.log(`❌ User Disconnected → ID: ${userId}, Socket: ${socket.id}`);
