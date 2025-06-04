@@ -23,6 +23,11 @@ export const userSocketMap = {};//{userId: socketId}
 
 // Helper function to get socketId by userId
 export const getUserSocketId = (userId) => {
+
+  if(!userSocketMap[userId]){
+    console.log(`User With Id ${userId} not found in userSocketMap`);
+    return null;
+  }
   return userSocketMap[userId];
 };
 
