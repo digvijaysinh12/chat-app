@@ -66,7 +66,7 @@ export const ChatProvider = ({ children }) => {
       }
     } catch (error) {
       console.log("Error in sendMessage:", error.message);
-      toast.error(error.message);
+      toast.error("Error sending message. Please try again");
     }
   };
 
