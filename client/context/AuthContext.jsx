@@ -93,6 +93,9 @@ export const AuthProvider = ({ children }) => {
             console.log("Socket already connected or userData missing");
             return;
         }
+        
+        // Disconnect socket that before creating new one
+        socket?.disconnect();
 
         //console.log("Connecting socket for user:", userData._id);
         const newSocket = io(backendUrl, {
