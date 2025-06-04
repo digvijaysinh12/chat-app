@@ -9,6 +9,7 @@ export const ChatProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
+  const [typingUsers, setTypingUsers] = useState({});
 
   const { socket, axios } = useContext(AuthContext);
 
@@ -92,6 +93,22 @@ export const ChatProvider = ({ children }) => {
 
       }
     });
+
+    socket.on("typing",({ fromUserId, isTyping }) => {
+      setTypingUsers((prev) => ({
+        ...prev,
+        [fromUserId]: isTyping,
+      }));
+
+      if(isTyping){
+        setTimeout(()=> {
+          setTypingUsers((prev) => ({
+            ...prev,
+            [fromUserId]:false,
+          }))
+        }, 3000); // auto-clear after 3 sec
+      }
+    })
   };
 
   // Unsubscribe from socket messages
@@ -119,6 +136,7 @@ export const ChatProvider = ({ children }) => {
     unseenMessages,
     setUnseenMessages,
     getMessages,
+    typingUsers,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
