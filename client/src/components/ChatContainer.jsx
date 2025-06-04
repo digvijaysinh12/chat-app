@@ -17,8 +17,12 @@ const ChatContainer = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (input.trim() === '') return null;
-    await sendMessage({ text: input.trim() });
     setInput('');
+    try {
+      await sendMessage({ text: input.trim() });
+    } catch (error) {
+      toast.error("Failed to send message.")
+    }
   };
 
   // Handle sending an Image
@@ -77,22 +81,14 @@ const ChatContainer = () => {
   useEffect(() => {
     if (socket) {
       socket.on('typing', ({ fromUserId, isTyping }) => {
-        setTypingUsers((prev) => {
-          const updated = { ...prev };
-          if (isTyping) {
-            updated[fromUserId] = true; // User is typing
-          } else {
-            delete updated[fromUserId]; // User stopped typing
-          }
-          return updated;
-        });
+        setTypingUsers((prev) => ({
+          ...prev,
+          [fromUserId]: isTyping,
+        }));
       });
+
+      return () => socket.off('typing');
     }
-    return () => {
-      if (socket) {
-        socket.off('typing'); // Clean up the event listener when the component unmounts
-      }
-    };
   }, [socket]);
 
   return selectedUser ? (
@@ -129,9 +125,8 @@ const ChatContainer = () => {
                 />
               ) : (
                 <p
-                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${
-                    msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'
-                  }`}
+                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'
+                    }`}
                 >
                   {msg.text}
                 </p>
@@ -156,7 +151,12 @@ const ChatContainer = () => {
 
         {/* Typing indicator */}
         {typingUsers[selectedUser._id] && (
-          <p className="text-xs italic text-gray-400 mb-2 ml-1">Typing...</p>
+          <div className={`flex items-end gap-2 ${authUser._id === selectedUser._id ? 'justify-end' : 'justify-start'}`}>
+            <div className="flex items-center">
+              {/* You can optionally add a small animated typing indicator here */}
+              <p className="text-xs italic text-gray-400 mb-2 ml-1">Typing...</p>
+            </div>
+          </div>
         )}
         <div ref={scrollEnd}></div>
       </div>
@@ -185,7 +185,7 @@ const ChatContainer = () => {
       <img onClick={handleSendMessage} src={assets.logo_icon} className="max-w-16" alt="" />
       <p className="text-lg font-medium text-white">Chat Anytime, anywhere</p>
     </div>
-  );
+  )
 };
 
 export default ChatContainer;
