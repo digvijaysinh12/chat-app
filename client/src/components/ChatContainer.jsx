@@ -52,6 +52,7 @@ const ChatContainer = () => {
         toUserId: selectedUser._id,
         isTyping: true,
       });
+     
 
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => {
