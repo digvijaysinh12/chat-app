@@ -4,27 +4,55 @@ import cloudinary from "../lib/cloudinary.js";
 import { io, userSocketMap } from "../server.js";
 
 // Get all users except the logged in user
-export const getUsersForSidebar = async (req,res)=> {
-    try{
-        const userId = req.user._id;
-        const filteredUsers = await User.find({_id:{$ne:userId}}).select("-password");
+export const getUsersForSidebar = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const users = await User.find({ _id: { $ne: userId } }).select("-password");
 
-        //Count number of messages not seen
-        const unseenMessages = {}
-        const promises = filteredUsers.map(async (user)=> {
-            const messages = await Message.find({senderId: user._id,receiverId:userId,seen:false})
+    const userListWithMeta = await Promise.all(
+      users.map(async (user) => {
+        const lastMessage = await Message.findOne({
+          $or: [
+            { senderId: userId, receiverId: user._id },
+            { senderId: user._id, receiverId: userId }
+          ]
+        }).sort({ createdAt: -1 });
 
-            if(messages.length>0){
-                unseenMessages[user._id] = messages.length;
-            }
-        })
-        await Promise.all(promises);
-        res.json({success:true, users:filteredUsers, unseenMessages})
-    }catch(error){
-        console.log(error.message);
-        res.json({success:false, message: filteredUsers, unseenMessages})
-    }
-}
+        const unseenCount = await Message.countDocuments({
+          senderId: user._id,
+          receiverId: userId,
+          seen: false
+        });
+
+
+        return {
+          user,
+          lastMessage,
+          unseenCount,
+          lastInteraction: lastMessage?.createdAt || user.createdAt
+        };
+      })
+    );
+
+    // Sort users by last interaction time (most recent first)
+    userListWithMeta.sort(
+      (a, b) => new Date(b.lastInteraction) - new Date(a.lastInteraction)
+    );
+
+    res.json({
+      success: true,
+      users: userListWithMeta.map(({ user, lastMessage, unseenCount }) => ({
+        ...user.toObject(),
+        lastMessage,
+        unseenCount
+      }))
+    });
+  } catch (error) {
+    console.error("Error in getUsersForSidebar:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 //Get all messages for selected User
 
