@@ -39,7 +39,7 @@ export const ChatProvider = ({ children }) => {
         // Reset unseen messages for this user
         setUnseenMessages((prev) => {
           const updated = { ...prev };
-          delete updated[userId];
+          delete updated[userId];  // Reset unseen messages for this user
           return updated;
         });
       }
@@ -84,10 +84,12 @@ export const ChatProvider = ({ children }) => {
       if (selectedUser && newMessage.senderId === selectedUser._id) {
         newMessage.seen = true;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
+        // Mark as seen in the backend
         axios.put(`/api/messages/mark/${newMessage._id}`);
       } else {
         setUnseenMessages((prev) => {
-          const updated = { ...prev, [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1 };
+          const updated = { ...prev };
+          updated[newMessage.senderId] = (updated[newMessage.senderId] || 0) + 1;
           return updated;
         });
       }
