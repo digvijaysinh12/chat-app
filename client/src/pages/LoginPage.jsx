@@ -10,30 +10,38 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [bio, setBio] = useState("");
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const {login} = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
-const onSubmitHandler = (event) => {
-  event.preventDefault();
+  const onSubmitHandler = (event) => {
+    event.preventDefault();
+    setIsLoading(true);
 
-  if (currState === 'Sign up') {
-    if (!isDataSubmitted) {
-      // Show the bio field instead of submitting
-      setIsDataSubmitted(true);
-      return;
+    try {
+      if (currState === 'Sign up') {
+        if (!isDataSubmitted) {
+          setIsLoading(false);
+          setIsDataSubmitted(true);
+          return;
+        }
+
+        // Final signup step with all fields
+        const formData = { fullName, email, password, bio };
+        console.log("Signup Data: ", formData);
+        login('signup', formData);  // only call here
+      } else {
+        // Login submission
+        const loginData = { email, password };
+        console.log("Login Data: ", loginData);
+        login('login', loginData);  // only call here
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Final signup step with all fields
-    const formData = { fullName, email, password, bio };
-    console.log("Signup Data: ", formData);
-    login('signup', formData);  // only call here
-  } else {
-    // Login submission
-    const loginData = { email, password };
-    console.log("Login Data: ", loginData);
-    login('login', loginData);  // only call here
   }
-}
 
 
   return (
@@ -116,16 +124,23 @@ const onSubmitHandler = (event) => {
           </>
         )}
 
-        <button type='submit' className='py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer'>
-          {currState === "Sign up"
-            ? isDataSubmitted
-              ? "Submit Bio"
-              : "Next"
-            : "Login Now"}
+        <button
+          type='submit'
+          className='py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer flex justify-center items-center gap-2'
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+          ) : currState === "Sign up" ? (
+            isDataSubmitted ? "Submit Bio" : "Next"
+          ) : (
+            "Login Now"
+          )}
         </button>
 
+
         <div className='flex items-center gap-2 text-sm text-gray-500'>
-          <input type='checkbox' required/>
+          <input type='checkbox' required />
           <p>Agree to the terms of use & privacy policy.</p>
         </div>
 
