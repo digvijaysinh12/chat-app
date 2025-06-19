@@ -21,7 +21,6 @@ export const ChatProvider = ({ children }) => {
       if (data.success) {
         setUsers(data.users);
         setUnseenMessages(data.unseenMessages);
-        //console.log("Unseen messages set:", data.unseenMessages);
       }
     } catch (error) {
       console.log("Error in getUsers:", error.message);
@@ -32,12 +31,17 @@ export const ChatProvider = ({ children }) => {
   // Get messages for selected user
   const getMessages = async (userId) => {
     try {
+      if (!userId) return toast.error("User ID missing.");
       console.log("Fetching messages for user:", userId);
       const { data } = await axios.get(`/api/messages/${userId}`);
       if (data.success) {
         setMessages(data.messages);
-        setUnseenMessages();
-        //console.log("Messages received:", data.messages);
+        // Reset unseen messages for this user
+        setUnseenMessages((prev) => {
+          const updated = { ...prev };
+          delete updated[userId];
+          return updated;
+        });
       }
     } catch (error) {
       console.log("Error in getMessages:", error.message);
@@ -60,7 +64,6 @@ export const ChatProvider = ({ children }) => {
       );
       if (data.success) {
         setMessages((prevMessages) => [...prevMessages, data.newMessage]);
-        //console.log("Message sent:", data.newMessage);
       } else {
         toast.error(data.message);
       }
@@ -70,17 +73,14 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // Subscribe to incoming messages
+  // Subscribe to incoming messages and typing events
   const subscribeToMessages = () => {
     if (!socket) {
-      //console.log("Socket not connected.");
       return;
     }
 
     console.log("Subscribing to socket messages...");
     socket.on("newMessage", (newMessage) => {
-      //console.log("New message received:", newMessage);
-
       if (selectedUser && newMessage.senderId === selectedUser._id) {
         newMessage.seen = true;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -90,37 +90,36 @@ export const ChatProvider = ({ children }) => {
           const updated = { ...prev, [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1 };
           return updated;
         });
-
       }
     });
 
-    socket.on("typing",({ fromUserId, isTyping }) => {
+    socket.on("typing", ({ fromUserId, isTyping }) => {
       setTypingUsers((prev) => ({
         ...prev,
         [fromUserId]: isTyping,
       }));
 
-      if(isTyping){
-        setTimeout(()=> {
+      // Auto-clear typing state after 3 seconds
+      if (isTyping) {
+        setTimeout(() => {
           setTypingUsers((prev) => ({
             ...prev,
-            [fromUserId]:false,
-          }))
-        }, 3000); // auto-clear after 3 sec
+            [fromUserId]: false,
+          }));
+        }, 3000);
       }
-    })
+    });
   };
 
   // Unsubscribe from socket messages
   const unsubscribeFromMessages = () => {
     if (socket) {
-      //console.log("Unsubscribing from socket messages...");
       socket.off("newMessage");
+      socket.off("typing");
     }
   };
 
   useEffect(() => {
-    //console.log("useEffect triggered. Socket:", socket, "Selected user:", selectedUser);
     subscribeToMessages();
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
