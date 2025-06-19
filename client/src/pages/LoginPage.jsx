@@ -125,7 +125,7 @@ const onSubmitHandler = (event) => {
         </button>
 
         <div className='flex items-center gap-2 text-sm text-gray-500'>
-          <input type='checkbox' />
+          <input type='checkbox' required/>
           <p>Agree to the terms of use & privacy policy.</p>
         </div>
 
