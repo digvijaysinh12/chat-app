@@ -11,7 +11,7 @@ export const ChatProvider = ({ children }) => {
   const [unseenMessages, setUnseenMessages] = useState({});
   const [typingUsers, setTypingUsers] = useState({});
 
-  const { socket, axios } = useContext(AuthContext);
+  const { socket, axios} = useContext(AuthContext);
 
   // Get all users for sidebar
   const getUsers = async () => {
@@ -125,6 +125,8 @@ export const ChatProvider = ({ children }) => {
     subscribeToMessages();
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
+
+
 
   const value = {
     messages,
