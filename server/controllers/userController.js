@@ -147,7 +147,7 @@ export const login = async(req,res) => {
         res.json({success:true, userData, token, message: "Login successfull"})
     }catch(error){
         console.log(error.message);
-        res.json({success: false, message:"Server Error"})
+        res.json({success: false, message: error.message})
     }
 }
 
@@ -178,7 +178,7 @@ export const updateProfile = async(req,res) =>{
         
     }catch(error){
         console.log(error);
-        res.json({success:false, message: "Server Error"});
+        res.json({success:false, message: error.message});
     }
 }
 
