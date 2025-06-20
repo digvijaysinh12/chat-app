@@ -32,6 +32,39 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Send OTP to user's email
+const sendOtp = async (email) => {
+    try {
+        const { data } = await axios.post("/api/auth/send-otp", { email });
+        if (data.success) {
+            toast.success(data.message || "OTP sent successfully");
+        } else {
+            toast.error(data.message || "Failed to send OTP");
+        }
+        return data;
+    } catch (error) {
+        toast.error("Error sending OTP");
+        return { success: false };
+    }
+};
+
+// Verify OTP
+const verifyOtp = async ({ email, otp }) => {
+    try {
+        const { data } = await axios.post("/api/auth/verify-otp", { email, otp });
+        if (data.success) {
+            toast.success(data.message || "OTP verified");
+        } else {
+            toast.error(data.message || "Invalid OTP");
+        }
+        return data;
+    } catch (error) {
+        toast.error("OTP verification failed");
+        return { success: false };
+    }
+};
+
+
     // Login user
     const login = async (state, credentials) => {
         try {
@@ -134,7 +167,9 @@ export const AuthProvider = ({ children }) => {
         socket,
         login,
         logout,
-        updateProfile
+        updateProfile,
+        sendOtp,
+        verifyOtp
     };
 
     return (
