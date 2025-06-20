@@ -49,7 +49,7 @@ export const getUsersForSidebar = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getUsersForSidebar:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
