@@ -2,37 +2,127 @@ import cloudinary from "../lib/cloudinary.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
 import bcrypt from 'bcryptjs'; 
+import { sendEmail } from "../utils/sendMail.js";
+import Otp from "../models/Otp.js";
 
+
+
+export const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Check if user already exists (optional, for signup flow)
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.json({ success: false, message: 'User already exists. Please login.' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins from now
+
+    // Upsert OTP record for this email
+    await Otp.findOneAndUpdate(
+      { email },
+      { otp, expiresAt },
+      { upsert: true, new: true }
+    );
+
+    await sendEmail(email, 'Your OTP Code', `Your OTP is ${otp}. It expires in 10 minutes.`);
+
+    res.json({ success: true, message: 'OTP sent successfully' });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// 2. Verify OTP
+// verifyOtp example when OTP stored separately
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const otpRecord = await Otp.findOne({ email });
+
+    if (!otpRecord || otpRecord.otp !== otp || otpRecord.expiresAt < new Date()) {
+      return res.json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    // Mark user as verified
+    const user = await User.findOne({ email });
+    if (user) {
+      user.isVerified = true;
+      await user.save();
+    } else {
+      // Optionally create user record or prompt signup next
+    }
+
+    // Optionally delete OTP record after verification
+    await Otp.deleteOne({ email });
+
+    res.json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
 
 
 // Signup a new user
-export const signup = async(req,res) => {
-    const {fullName,email,password,bio} = req.body;
+export const signup = async (req, res) => {
+  const { fullName, email, password, bio } = req.body;
 
-    try{
-        if(!fullName || !email || !password || !bio){
-            res.json({success:false,message: "Missing Details"})
-        }
-        const user =  await User.findOne({email});
-        if(user){
-            res.json({success:false,message: "User already exist"});
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password,salt);
-
-        const newUser = await User.create({
-            fullName, email, password: hashedPassword, bio
- 
-        })
-
-        const token = generateToken(newUser._id)
-        
-        res.json({success:true, userData: newUser, token, message:"Account created Successfully"})
-    }catch(error){
-        console.log(error);
-        res.json({success:false, message:error.message})
+  try {
+    if (!fullName || !email || !password || !bio) {
+      return res.json({ success: false, message: "Missing Details" });
     }
-}
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (user) {
+      // If user exists but not verified, reject signup
+      if (!user.isVerified) {
+        return res.json({ success: false, message: "Email not verified. Please verify OTP before signing up." });
+      }
+      // If user already signed up (password exists), reject
+      if (user.password) {
+        return res.json({ success: false, message: "User already exists" });
+      }
+      // If user exists and verified but no password, update user with signup info
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      user.fullName = fullName;
+      user.password = hashedPassword;
+      user.bio = bio;
+
+      await user.save();
+
+      const token = generateToken(user._id);
+      return res.json({ success: true, userData: user, token, message: "Account created successfully" });
+    }
+
+    // If user does not exist (somehow), create new user (unlikely if OTP sent properly)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      fullName,
+      email,
+      password: hashedPassword,
+      bio,
+      isVerified: true,  // Since OTP verified, mark verified
+    });
+
+    const token = generateToken(newUser._id);
+
+    res.json({ success: true, userData: newUser, token, message: "Account created successfully" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 
 
 
@@ -42,6 +132,9 @@ export const login = async(req,res) => {
     try{
         const { email, password } = req.body;
         const userData = await User.findOne({email})
+        if(!userData){
+            return res.json({success:false, message: "You are not Signup Yet! Please Signup"})
+        }
 
         const isPasswordCorrect = await  bcrypt.compare(password,userData.password);
 
@@ -54,7 +147,7 @@ export const login = async(req,res) => {
         res.json({success:true, userData, token, message: "Login successfull"})
     }catch(error){
         console.log(error.message);
-        res.json({success: false, message:error.message})
+        res.json({success: false, message:"Server Error"})
     }
 }
 
