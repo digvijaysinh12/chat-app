@@ -1,11 +1,25 @@
 import mongoose from "mongoose";
 
-// Function to connect to the mognodb database
-export const connectDB = async(req,res) => {
-    try{
-        mongoose.connection.on('connected',()=> console.log('Database Connected'));
-        await mongoose.connect(`${process.env.MONGODB_URI}/chatApp`)
-    }catch(error){
-            res.status({success:false,message:error.message})
+export const connectDB = async () => {
+    if (!process.env.MONGODB_URI) {
+        console.error("❌ MONGODB_URI is not defined in environment variables.");
+        process.exit(1);
     }
-}
+
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log("✅ Database Connected Successfully");
+    } catch (error) {
+        console.error("❌ Error connecting to MongoDB:", error.message);
+        process.exit(1);
+    }
+};
+
+// Mongoose connection events
+mongoose.connection.on("disconnected", () => {
+    console.warn("⚠️ MongoDB Disconnected");
+});
+
+mongoose.connection.on("error", (err) => {
+    console.error("❌ MongoDB connection error:", err);
+});
