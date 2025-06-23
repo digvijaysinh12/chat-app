@@ -23,8 +23,6 @@ export const getUsersForSidebar = async (req, res) => {
           receiverId: userId,
           seen: false
         });
-
-
         return {
           user,
           lastMessage,
@@ -53,6 +51,43 @@ export const getUsersForSidebar = async (req, res) => {
   }
 };
 
+export const getContactedUsers = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    console.log("UserId" +userId);
+
+    // Find messages where the user is either sender or receiver
+    const messages = await Message.find({
+      $or: [{ senderId: userId }, { receiverId: userId }]
+      
+    });
+    messages.map(p=> {
+      console.log("UserId" +p);
+    })
+
+    // Extract unique user IDs that communicated with current user
+    const userSet = new Set();
+
+    messages.forEach(msg => {
+      if (msg.senderId.toString() !== userId.toString()) {
+        userSet.add(msg.senderId.toString());
+      }
+      if (msg.receiverId.toString() !== userId.toString()) {
+        userSet.add(msg.receiverId.toString());
+      }
+    });
+
+    const contactedUserIds = Array.from(userSet);
+
+    // Fetch user details excluding passwords
+    const users = await User.find({ _id: { $in: contactedUserIds } }).select("-password");
+
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error("Error in getContactedUsers:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
 
 //Get all messages for selected User
 
