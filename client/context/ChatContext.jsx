@@ -10,6 +10,7 @@ export const ChatProvider = ({ children }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
   const [typingUsers, setTypingUsers] = useState({});
+  const [contacts,setContacts] = useState([]);
 
   const { socket, axios} = useContext(AuthContext);
 
@@ -24,6 +25,19 @@ export const ChatProvider = ({ children }) => {
       }
     } catch (error) {
       console.log("Error in getUsers:", error.message);
+      toast.error(error.message);
+    }
+  };
+
+  const getContacts = async () => {
+    try {
+      const { data } = await axios.get("/api/messages/contacts");
+
+      if (data.success) {
+        setContacts(data.users);
+      }
+    } catch (error) {
+      console.log("Error in Get Contacts:", error.message);
       toast.error(error.message);
     }
   };
@@ -131,6 +145,7 @@ export const ChatProvider = ({ children }) => {
   const value = {
     messages,
     users,
+    contacts,
     selectedUser,
     getUsers,
     setMessages,
@@ -140,6 +155,7 @@ export const ChatProvider = ({ children }) => {
     setUnseenMessages,
     getMessages,
     typingUsers,
+    getContacts
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
