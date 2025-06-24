@@ -1,0 +1,159 @@
+.sidebar {
+  background-color: rgba(129, 133, 178, 0.1);
+  height: 100%;
+  padding: 20px;
+  border-radius: 0 12px 12px 0;
+  overflow-y: auto;
+  color: white;
+}
+
+.hide-on-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hide-on-mobile {
+    display: block;
+  }
+}
+
+.sidebar-header {
+  padding-bottom: 20px;
+}
+
+.logo-menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  max-width: 160px;
+}
+
+.menu-wrapper {
+  position: relative;
+  padding: 10px 0;
+}
+
+.menu-icon {
+  height: 20px;
+  cursor: pointer;
+}
+
+.menu-wrapper:hover .menu-dropdown {
+  display: block;
+}
+
+.menu-dropdown {
+  display: block; 
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 20;
+  width: 130px;
+  background-color: #282142;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+
+.dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #374151;
+}
+
+.dropdown-divider {
+  margin: 4px 0;
+  border-top: 1px solid #6b7280;
+}
+
+.search-bar {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #282142;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  flex: 1;
+  font-size: 14px;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.user-selected {
+  background-color: rgba(40, 33, 66, 0.5);
+}
+
+.user-avatar {
+  width: 35px;
+  height: 35px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  font-size: 14px;
+}
+
+.status-online {
+  color: #34d399;
+  font-size: 12px;
+}
+
+.status-offline {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.unseen-count {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 12px;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(139, 92, 246, 0.5);
+  border-radius: 50%;
+}
