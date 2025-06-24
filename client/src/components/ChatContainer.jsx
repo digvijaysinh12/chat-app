@@ -3,6 +3,7 @@ import assets from '../assets/assets';
 import { ChatContext } from '../../context/ChatContext';
 import { AuthContext } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import './ChatContainer.css';
 
 const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } = useContext(ChatContext);
@@ -11,182 +12,152 @@ const ChatContainer = () => {
   const scrollEnd = useRef();
   const typingTimeoutRef = useRef(null);
   const [input, setInput] = useState('');
-  const [typingUsers, setTypingUsers] = useState({}); // State to manage typing users
+  const [typingUsers, setTypingUsers] = useState({});
 
-  // Handle sending a message
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (input.trim() === '') return null;
     setInput('');
     try {
       await sendMessage({ text: input.trim() });
-    } catch (error) {
-      toast.error("Failed to send message.")
+    } catch {
+      toast.error("Failed to send message.");
     }
   };
 
-  // Handle sending an Image
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith('image/')) {
       toast.error('Select an image file');
       return;
     }
-
     const reader = new FileReader();
-
     reader.onload = async () => {
       await sendMessage({ image: reader.result });
       e.target.value = '';
     };
-
     reader.readAsDataURL(file);
   };
 
-  // Handle when user is typing
   const handleTyping = (e) => {
     setInput(e.target.value);
-
     if (socket && selectedUser) {
-      socket.emit('typing', {
-        toUserId: selectedUser._id,
-        isTyping: true,
-      });
-     
-
+      socket.emit('typing', { toUserId: selectedUser._id, isTyping: true });
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => {
-        socket.emit('typing', {
-          toUserId: selectedUser._id,
-          isTyping: false,
-        });
+        socket.emit('typing', { toUserId: selectedUser._id, isTyping: false });
       }, 1500);
     }
   };
 
-  // Fetch messages when the selected user changes
   useEffect(() => {
-    if (selectedUser) {
-      getMessages(selectedUser._id);
-    }
+    if (selectedUser) getMessages(selectedUser._id);
   }, [selectedUser]);
 
-  // Scroll to the latest message
   useEffect(() => {
     if (scrollEnd.current && messages) {
       scrollEnd.current.scrollIntoView();
     }
   }, [messages]);
 
-  // Listen for typing events from the socket
   useEffect(() => {
     if (socket) {
       socket.on('typing', ({ fromUserId, isTyping }) => {
-        setTypingUsers((prev) => ({
-          ...prev,
-          [fromUserId]: isTyping,
-        }));
+        setTypingUsers(prev => ({ ...prev, [fromUserId]: isTyping }));
       });
-
       return () => socket.off('typing');
     }
   }, [socket]);
 
-  return selectedUser ? (
-    <div className="h-full overflow-scroll relative backdrop:backdrop-blur-lg">
-      {/* ---- Header ---- */}
-      <div className="flex flex-center gap-3 py-3 mx-4 border-b border-stone-500">
-        <img src={selectedUser?.profilePic || assets.avatar_icon} alt="" className="w-8 rounded-full" />
-        <p className="flex-1 text-lg text-white flex items-center gap-2">
+  if (!selectedUser) {
+    return (
+      <div className="chat-empty-state">
+        <img onClick={handleSendMessage} src={assets.logo_icon} alt="Logo" className="chat-empty-logo" />
+        <p className="chat-empty-text">Chat Anytime, anywhere</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat-container">
+      {/* Header */}
+      <div className="chat-header">
+        <img src={selectedUser?.profilePic || assets.avatar_icon} alt="" className="chat-header-avatar" />
+        <p className="chat-header-name">
           {selectedUser.fullName}
-          {onlineUsers.includes(selectedUser._id) && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
+          {onlineUsers.includes(selectedUser._id) && <span className="online-dot"></span>}
         </p>
         <img
           onClick={() => setSelectedUser(null)}
           src={assets.arrow_icon}
-          alt=""
-          className="md:hidden max-w-7 cursor-pointer"
+          alt="Back"
+          className="chat-header-back-icon"
         />
-        <img src={assets.help_icon} alt="" className="max-md:hidden max-w-5" />
+        <img src={assets.help_icon} alt="Help" className="chat-header-help-icon" />
       </div>
 
-      {/* ---- Chat Area ---- */}
-      <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">
+      {/* Chat messages */}
+      <div className="chat-messages">
         {messages.length > 0 ? (
-          messages.map((msg, index) => (
+          messages.map((msg, idx) => (
             <div
-              key={index}
-              className={`flex items-end gap-2 ${msg.senderId === authUser._id ? 'justify-end' : 'justify-start'}`}
+              key={idx}
+              className={`chat-message-row ${msg.senderId === authUser._id ? 'chat-message-right' : 'chat-message-left'}`}
             >
               {msg.image ? (
-                <img
-                  src={msg.image}
-                  alt=""
-                  className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
-                />
+                <img src={msg.image} alt="sent" className="chat-message-image" />
               ) : (
-                <p
-                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'
-                    }`}
-                >
+                <p className={`chat-message-text ${msg.senderId === authUser._id ? 'right-text' : 'left-text'}`}>
                   {msg.text}
                 </p>
               )}
-              <div className="text-center text-xs">
+              <div className="chat-message-meta">
                 <img
-                  src={
-                    msg.senderId === authUser._id
-                      ? authUser?.profilePic || assets.avatar_icon
-                      : selectedUser?.profilePic || assets.avatar_icon
-                  }
-                  alt=""
-                  className="w-7 rounded-full"
+                  src={msg.senderId === authUser._id ? authUser?.profilePic || assets.avatar_icon : selectedUser?.profilePic || assets.avatar_icon}
+                  alt="User"
+                  className="chat-message-avatar"
                 />
-                <p className="text-gray-500">{new Date(msg.createdAt).toLocaleTimeString()}</p>
+                <p className="chat-message-time">{new Date(msg.createdAt).toLocaleTimeString()}</p>
               </div>
             </div>
           ))
         ) : (
-          <p className="text-gray-400 text-sm text-center mt-4">No messages yet.</p>
+          <p className="no-messages">No messages yet.</p>
         )}
 
         {/* Typing indicator */}
         {typingUsers[selectedUser._id] && (
-          <div className={`flex items-end gap-2 ${authUser._id === selectedUser._id ? 'justify-end' : 'justify-start'}`}>
-            <div className="flex items-center">
-              {/* You can optionally add a small animated typing indicator here */}
-              <p className="text-xs italic text-gray-400 mb-2 ml-1">Typing...</p>
+          <div className={`chat-message-row ${authUser._id === selectedUser._id ? 'chat-message-right' : 'chat-message-left'}`}>
+            <div className="typing-indicator">
+              <p className="typing-text">Typing...</p>
             </div>
           </div>
         )}
         <div ref={scrollEnd}></div>
       </div>
 
-      {/* ---- Bottom Area ---- */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
-        <div className="flex-1 flex items-center bg-gray-100/12 px-3 rounded-full">
+      {/* Input area */}
+      <form className="chat-input-area" onSubmit={handleSendMessage}>
+        <div className="chat-input-wrapper">
           <input
             onChange={handleTyping}
             value={input}
-            onKeyDown={(e) => e.key === 'Enter' ? handleSendMessage(e) : null}
             type="text"
             placeholder="Send a message"
-            className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
+            className="chat-input"
+            onKeyDown={e => e.key === 'Enter' ? handleSendMessage(e) : null}
           />
-          <input onChange={handleSendImage} type="file" id="image" accept="image/png, image/jpeg" hidden />
-          <label htmlFor="image">
-            <img src={assets.gallery_icon} alt="" className="w-5 mr-2 cursor-pointer" />
+          <input type="file" id="image" accept="image/png, image/jpeg" hidden onChange={handleSendImage} />
+          <label htmlFor="image" className="chat-input-label">
+            <img src={assets.gallery_icon} alt="Upload" className="chat-upload-icon" />
           </label>
         </div>
-        <img src={assets.send_button} alt="" className="w-7 cursor-pointer" />
-      </div>
+        <button type="submit" className="chat-send-button">
+          <img src={assets.send_button} alt="Send" />
+        </button>
+      </form>
     </div>
-  ) : (
-    <div className="flex flex-col items-center justify-center gap-2 text-gray-500 bg-white/10 max-md:hidden">
-      <img onClick={handleSendMessage} src={assets.logo_icon} className="max-w-16" alt="" />
-      <p className="text-lg font-medium text-white">Chat Anytime, anywhere</p>
-    </div>
-  )
+  );
 };
 
 export default ChatContainer;
