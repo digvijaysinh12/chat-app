@@ -1,6 +1,7 @@
-import React, { useContext, useState } from 'react'
-import assets from '../assets/assets'
+import React, { useContext, useState } from 'react';
+import assets from '../assets/assets';
 import { AuthContext } from '../../context/AuthContext';
+import './LoginPage.css'; // External CSS file
 
 const LoginPage = () => {
   const [currState, setCurrState] = useState("Sign up");
@@ -16,7 +17,6 @@ const LoginPage = () => {
 
   const { login, sendOtp, verifyOtp } = useContext(AuthContext);
 
-  // Reset relevant states on switching currState
   const switchToLogin = () => {
     setCurrState("Login");
     setFullName("");
@@ -68,7 +68,6 @@ const LoginPage = () => {
           return setIsLoading(false);
         }
 
-        // Final step: submit form
         const formData = { fullName, email, password, bio };
         console.log("Signup Data: ", formData);
         await login('signup', formData);
@@ -85,20 +84,20 @@ const LoginPage = () => {
   };
 
   return (
-    <div className='min-h-screen bg-cover bg-center flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl'>
-      {/* _________________________Right________________________________ */}
-      <form onSubmit={onSubmitHandler} className='border-2 bg-white/8 text-white border-gray-500 p-6 flex flex-col rounded-lg shadow-lg gap-4'>
-        <h2 className='font-medium text-2xl flex justify-between items-center'>
-          {currState}
-          {currState === "Sign up" && isDataSubmitted && (
-            <img
-              onClick={() => setIsDataSubmitted(false)}
-              src={assets.arrow_icon}
-              alt="Back"
-              className='w-5 cursor-pointer'
-            />
-          )}
-        </h2>
+    <div className="login-container">
+      <form onSubmit={onSubmitHandler} className="login-form">
+<h2 className="form-title">
+  {currState}
+  {currState === "Sign up" && isDataSubmitted && (
+    <img
+      onClick={() => setIsDataSubmitted(false)}
+      src={assets.arrow_icon}
+      alt="Back"
+      className="back-arrow"
+    />
+  )}
+</h2>
+
 
         {currState === "Sign up" && !isDataSubmitted && (
           <>
@@ -106,9 +105,9 @@ const LoginPage = () => {
               onChange={(e) => setFullName(e.target.value)}
               value={fullName}
               type='text'
-              className='p-2 border border-gray-500 rounded-md focus:outline-none'
               placeholder='Full Name'
               required
+              className="form-input"
             />
             <input
               onChange={(e) => setEmail(e.target.value)}
@@ -116,7 +115,7 @@ const LoginPage = () => {
               type='email'
               placeholder='Email Address'
               required
-              className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2'
+              className="form-input"
             />
             <input
               onChange={(e) => setPassword(e.target.value)}
@@ -124,17 +123,15 @@ const LoginPage = () => {
               type='password'
               placeholder='Password'
               required
-              className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2'
+              className="form-input"
             />
-
-            {/* Show OTP input field if otpSent and not verified */}
             {otpSent && !otpVerified && (
               <input
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="Enter OTP"
-                className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2'
+                className="form-input"
                 required
               />
             )}
@@ -146,7 +143,7 @@ const LoginPage = () => {
             onChange={(e) => setBio(e.target.value)}
             value={bio}
             rows={4}
-            className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500'
+            className="form-textarea"
             placeholder='Provide a short bio...'
             required
           ></textarea>
@@ -160,7 +157,7 @@ const LoginPage = () => {
               type='email'
               placeholder='Email Address'
               required
-              className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2'
+              className="form-input"
             />
             <input
               onChange={(e) => setPassword(e.target.value)}
@@ -168,18 +165,18 @@ const LoginPage = () => {
               type='password'
               placeholder='Password'
               required
-              className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2'
+              className="form-input"
             />
           </>
         )}
 
         <button
           type='submit'
-          className='py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer flex justify-center items-center gap-2'
+          className="submit-button"
           disabled={isLoading}
         >
           {isLoading ? (
-            <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+            <div className="spinner"></div>
           ) : currState === "Sign up" ? (
             !otpSent ? "Send OTP" :
               !otpVerified ? "Verify OTP" :
@@ -189,29 +186,23 @@ const LoginPage = () => {
           )}
         </button>
 
-        <div className='flex items-center gap-2 text-sm text-gray-500'>
+        <div className="checkbox-container">
           <input type='checkbox' required />
           <p>Agree to the terms of use & privacy policy.</p>
         </div>
 
-        <div className='flex flex-col gap-2'>
+        <div className="switch-text">
           {currState === "Sign up" ? (
-            <p className='text-sm text-gray-600'>
+            <p>
               Already have an account?{" "}
-              <span
-                onClick={switchToLogin}
-                className='text-sm text-violet-500 cursor-pointer'
-              >
+              <span onClick={switchToLogin} className="switch-link">
                 Login here
               </span>
             </p>
           ) : (
-            <p className='text-sm text-gray-600'>
+            <p>
               Create an account{" "}
-              <span
-                onClick={switchToSignUp}
-                className='text-sm text-violet-500 cursor-pointer'
-              >
+              <span onClick={switchToSignUp} className="switch-link">
                 Click here
               </span>
             </p>
