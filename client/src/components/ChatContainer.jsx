@@ -11,21 +11,21 @@ const ChatContainer = () => {
   const scrollEnd = useRef();
   const typingTimeoutRef = useRef(null);
   const [input, setInput] = useState('');
-  const [typingUsers, setTypingUsers] = useState({}); // State to manage typing users
+  const [typingUsers, setTypingUsers] = useState({}); 
 
-  // Handle sending a message
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (input.trim() === '') return null;
-    setInput('');
-    try {
-      await sendMessage({ text: input.trim() });
-    } catch (error) {
-      toast.error("Failed to send message.")
-    }
-  };
+  
+const handleSendMessage = async () => {
+  if (input.trim() === '') return;
+  setInput('');
+  try {
+    await sendMessage({ text: input.trim() });
+  } catch (error) {
+    toast.error("Failed to send message.");
+  }
+};
 
-  // Handle sending an Image
+
+ 
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith('image/')) {
@@ -43,7 +43,7 @@ const ChatContainer = () => {
     reader.readAsDataURL(file);
   };
 
-  // Handle when user is typing
+  
   const handleTyping = (e) => {
     setInput(e.target.value);
 
@@ -126,24 +126,16 @@ const ChatContainer = () => {
                 />
               ) : (
                 <p
-                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'
+                  className={`p-4 max-w-[200px] md:text-lm font-light rounded-lg mb-10 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'
                     }`}
                 >
                   {msg.text}
+                <p className='text-xs'>
+                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                </p>
                 </p>
               )}
-              <div className="text-center text-xs">
-                <img
-                  src={
-                    msg.senderId === authUser._id
-                      ? authUser?.profilePic || assets.avatar_icon
-                      : selectedUser?.profilePic || assets.avatar_icon
-                  }
-                  alt=""
-                  className="w-7 rounded-full"
-                />
-                <p className="text-gray-500">{new Date(msg.createdAt).toLocaleTimeString()}</p>
-              </div>
+
             </div>
           ))
         ) : (
@@ -155,7 +147,7 @@ const ChatContainer = () => {
           <div className={`flex items-end gap-2 ${authUser._id === selectedUser._id ? 'justify-end' : 'justify-start'}`}>
             <div className="flex items-center">
               {/* You can optionally add a small animated typing indicator here */}
-              <p className="text-xs italic text-gray-400 mb-2 ml-1">Typing...</p>
+              <p className="text-xs italic  bg-violet-500/30 text-white mb-2 ml-1">Typing...</p>
             </div>
           </div>
         )}
@@ -178,12 +170,12 @@ const ChatContainer = () => {
             <img src={assets.gallery_icon} alt="" className="w-5 mr-2 cursor-pointer" />
           </label>
         </div>
-        <img src={assets.send_button} alt="" className="w-7 cursor-pointer" />
+        <img onClick={handleSendMessage} src={assets.send_button} alt="" className="w-7 cursor-pointer" />
       </div>
     </div>
   ) : (
     <div className="flex flex-col items-center justify-center gap-2 text-gray-500 bg-white/10 max-md:hidden">
-      <img onClick={handleSendMessage} src={assets.logo_icon} className="max-w-16" alt="" />
+      <img src={assets.logo_icon} className="max-w-16" alt="" />
       <p className="text-lg font-medium text-white">Chat Anytime, anywhere</p>
     </div>
   )

@@ -12,7 +12,7 @@ const Sidebar = () => {
     contacts,
     selectedUser,
     setSelectedUser,
-    unseenMessages
+    unseenMessages,
   } = useContext(ChatContext);
 
   const { logout, onlineUsers } = useContext(AuthContext);

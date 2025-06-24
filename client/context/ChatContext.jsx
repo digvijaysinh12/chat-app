@@ -101,11 +101,10 @@ export const ChatProvider = ({ children }) => {
         // Mark as seen in the backend
         axios.put(`/api/messages/mark/${newMessage._id}`);
       } else {
-        setUnseenMessages((prev) => {
-          const updated = { ...prev };
-          updated[newMessage.senderId] = (updated[newMessage.senderId] || 0) + 1;
-          return updated;
-        });
+    setUnseenMessages((prev) => ({
+      ...prev,
+      [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1,
+    }));
       }
     });
 
@@ -136,11 +135,29 @@ export const ChatProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    subscribeToMessages();
+    if(socket&&socket.connected){
+      subscribeToMessages();
+    }
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
 
 
+  useEffect(() => {
+    if(socket){
+      getContacts();
+      getUsers();
+    }
+  },[socket]);
+
+  useEffect(() => {
+  if (socket) {
+    socket.on("newMessage", (newMsg) => {
+      setMessages(prev => [...prev, newMsg]); // append new message
+    });
+
+    return () => socket.off("newMessage");
+  }
+}, [socket]);
 
   const value = {
     messages,
