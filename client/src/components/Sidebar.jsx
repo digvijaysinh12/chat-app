@@ -3,6 +3,7 @@ import assets from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { ChatContext } from '../../context/ChatContext';
+import './Sidebar.css';
 
 const Sidebar = () => {
   const {
@@ -18,106 +19,99 @@ const Sidebar = () => {
   const { logout, onlineUsers } = useContext(AuthContext);
 
   const [input, setInput] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false); // <<== New state
   const navigate = useNavigate();
 
-  // Filter users based on search input
   const filteredUsers = input
     ? users.filter(user =>
         user.fullName.toLowerCase().includes(input.toLowerCase())
       )
     : [];
 
-  // Fetch recent contacts when onlineUsers change
   useEffect(() => {
     getContacts();
   }, [onlineUsers]);
 
-  // Fetch full user list only when searching
   useEffect(() => {
     if (input.trim()) {
       getUsers();
     }
   }, [input]);
 
-  return (
-    <div
-      className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${
-        selectedUser ? 'max-md:hidden' : ''
-      }`}
-    >
-      {/* Logo and Menu */}
-      <div className="pb-5">
-        <div className="flex justify-between items-center">
-          <img src={assets.logo} alt="logo" className="max-w-40" />
+  const toggleMenu = () => {
+    setMenuOpen(prev => !prev);
+  };
 
-          <div className="relative py-2 group">
+  const handleNavigate = (path) => {
+    setMenuOpen(false);
+    navigate(path);
+  };
+
+  const handleLogout = () => {
+    setMenuOpen(false);
+    logout();
+  };
+
+  return (
+    <div className={`sidebar ${selectedUser ? 'hide-on-mobile' : ''}`}>
+      <div className="sidebar-header">
+        <div className="logo-menu">
+          <img src={assets.logo} alt="logo" className="logo" />
+          <div className="menu-wrapper">
             <img
               src={assets.menu_icon}
               alt="Menu"
-              className="max-h-5 cursor-pointer"
+              className="menu-icon"
+              onClick={toggleMenu}
             />
-
-            <div className="absolute top-full right-0 z-20 w-32 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block shadow-lg">
-              <p
-                onClick={() => navigate('/profile')}
-                className="cursor-pointer text-sm hover:bg-gray-700 px-3 py-2"
-              >
-                Edit Profile
-              </p>
-              <hr className="my-1 border-t border-gray-500" />
-              <p
-                onClick={logout}
-                className="cursor-pointer text-sm hover:bg-gray-700 px-3 py-2"
-              >
-                Logout
-              </p>
-            </div>
+            {menuOpen && (
+              <div className="menu-dropdown">
+                <p onClick={() => handleNavigate('/profile')} className="dropdown-item">
+                  Edit Profile
+                </p>
+                <hr className="dropdown-divider" />
+                <p onClick={handleLogout} className="dropdown-item">
+                  Logout
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mt-4 flex items-center gap-2 bg-[#282142] px-3 py-2 rounded-md">
-          <img
-            src={assets.search_icon}
-            alt="Search"
-            className="w-4 h-4 opacity-70"
-          />
+        <div className="search-bar">
+          <img src={assets.search_icon} alt="Search" className="search-icon" />
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             type="text"
-            className="bg-transparent border-none outline-none text-white text-sm placeholder-[#c8c8c8] flex-1"
             placeholder="Search User..."
+            className="search-input"
           />
         </div>
       </div>
 
-      {/* User List (Search or Contacts) */}
-      <div className="flex flex-col">
+      <div className="user-list">
         {(input.trim() ? filteredUsers : contacts).map((user, index) => (
           <div
             key={user._id || index}
             onClick={() => setSelectedUser(user)}
-            className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${
-              selectedUser?._id === user._id ? 'bg-[#282142]/50' : ''
+            className={`user-card ${
+              selectedUser?._id === user._id ? 'user-selected' : ''
             }`}
           >
             <img
               src={user?.profilePic || assets.avatar_icon}
               alt=""
-              className="w-[35px] aspect-[1/1] rounded-full"
+              className="user-avatar"
             />
-            <div className="flex flex-col leading-5">
+            <div className="user-info">
               <p>{user.fullName}</p>
-              {onlineUsers.includes(user._id) ? (
-                <span className="text-green-400 text-xs">Online</span>
-              ) : (
-                <span className="text-neutral-400 text-xs">Offline</span>
-              )}
+              <span className={onlineUsers.includes(user._id) ? 'status-online' : 'status-offline'}>
+                {onlineUsers.includes(user._id) ? 'Online' : 'Offline'}
+              </span>
             </div>
-
             {unseenMessages?.[user._id] > 0 && (
-              <p className="absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50">
+              <p className="unseen-count">
                 {unseenMessages[user._id]}
               </p>
             )}
