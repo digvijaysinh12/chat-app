@@ -54,16 +54,12 @@ export const getUsersForSidebar = async (req, res) => {
 export const getContactedUsers = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log("UserId" +userId);
 
     // Find messages where the user is either sender or receiver
     const messages = await Message.find({
       $or: [{ senderId: userId }, { receiverId: userId }]
       
     });
-    messages.map(p=> {
-      console.log("UserId" +p);
-    })
 
     // Extract unique user IDs that communicated with current user
     const userSet = new Set();
@@ -106,9 +102,7 @@ export const getMessages = async(req,res) => {
         await Message.updateMany({senderId: selecredUserId,receiverId:myId}, {seen: true});
         
         res.json({success: true, messages})
-    }catch(error){
-
-        console.log(error.message);
+    }catch(error){        
         res.json({success:false, message: "Server Error"})
     }
 }
@@ -121,7 +115,6 @@ export const markMessageSeen = async(req,res) => {
         await Message.findByIdAndUpdate(id, {seen:true})
         res.json({success: true})
     }catch(error){
-        console.log(error.message);
         res.json({success:false, message: "Server Errror"})
     }
 }
@@ -154,7 +147,6 @@ export const sendMessage = async(req,res) => {
         }
         res.json({success:true, newMessage});
     }catch(error){
-        console.log(error.message);
         res.json({success:false, message: "Server Error"})
     }
 }

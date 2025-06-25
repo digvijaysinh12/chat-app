@@ -25,7 +25,6 @@ export const userSocketMap = {};//{userId: socketId}
 export const getUserSocketId = (userId) => {
 
   if(!userSocketMap[userId]){
-    console.log(`User With Id ${userId} not found in userSocketMap`);
     return null;
   }
   return userSocketMap[userId];
@@ -34,14 +33,10 @@ export const getUserSocketId = (userId) => {
 // Socket.io connection handler
 io.on("connection", (socket)=>{
     const userId = socket.handshake.query.userId;
-    console.log("User Connected", userId);
 
   if (userId) {
     userSocketMap[userId] = socket.id;
     socket.userId = userId;
-    console.log(`✅ User Connected → ID: ${userId}, Socket: ${socket.id}`);
-  } else {
-    console.log("⚠️ Connection attempted without userId");
   }
     // Emit online users to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
@@ -57,7 +52,6 @@ io.on("connection", (socket)=>{
     })
   // Disconnect handler
   socket.on("disconnect", () => {
-    console.log(`❌ User Disconnected → ID: ${userId}, Socket: ${socket.id}`);
     if (userId in userSocketMap) {
       delete userSocketMap[userId];
       io.emit("getOnlineUsers", Object.keys(userSocketMap));

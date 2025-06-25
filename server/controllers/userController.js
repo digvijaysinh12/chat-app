@@ -31,7 +31,6 @@ export const sendOtp = async (req, res) => {
 
     res.json({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
-    console.log(error);
     res.json({ success: false, message: error.message });
   }
 };
@@ -61,7 +60,7 @@ export const verifyOtp = async (req, res) => {
 
     res.json({ success: true, message: "OTP verified successfully" });
   } catch (error) {
-    console.log(error);
+
     res.json({ success: false, message: error.message });
   }
 };
@@ -116,7 +115,6 @@ export const signup = async (req, res) => {
 
     res.json({ success: true, userData: newUser, token, message: "Account created successfully" });
   } catch (error) {
-    console.log(error);
     res.json({ success: false, message: error.message });
   }
 };
@@ -144,7 +142,6 @@ export const login = async(req,res) => {
 
         res.json({success:true, userData, token, message: "Login successfull"})
     }catch(error){
-        console.log(error.message);
         res.json({success: false, message: error.message})
     }
 }
@@ -175,7 +172,6 @@ export const updateProfile = async(req,res) =>{
         res.json({success:true, user: updatedUser})
         
     }catch(error){
-        console.log(error);
         res.json({success:false, message: error.message});
     }
 }
