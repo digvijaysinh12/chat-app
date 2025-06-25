@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import axios from 'axios';
+import axios from "axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
@@ -7,6 +7,7 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
 axios.defaults.baseURL = backendUrl;
 
 export const AuthContext = createContext();
+const DEBUG = true;
 
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem("token"));
@@ -17,147 +18,158 @@ export const AuthProvider = ({ children }) => {
     // Check if user is authenticated
     const checkAuth = async () => {
         try {
-            //console.log("Checking user authentication...");
             const { data } = await axios.get("/api/auth/check");
-            //console.log("Auth check response:", data);
-
             if (data.success) {
                 setAuthUser(data.user);
-                //console.log("User authenticated:", data.user);
                 connectSocket(data.user);
+                if (DEBUG) console.log("User authenticated:", data.user);
             }
         } catch (error) {
-            //console.error("Auth check error:", error.message);
-            toast.error(error.message);
+            toast.error(error.response?.data?.message || error.message);
         }
     };
 
     // Send OTP to user's email
-const sendOtp = async (email) => {
-    try {
-        const { data } = await axios.post("/api/auth/send-otp", { email });
-        if (data.success) {
-            toast.success(data.message || "OTP sent successfully");
-        } else {
-            toast.error(data.message || "Failed to send OTP");
-        }
-        return data;
-    } catch (error) {
-        toast.error("Error sending OTP");
-        return { success: false };
-    }
-};
-
-// Verify OTP
-const verifyOtp = async ({ email, otp }) => {
-    try {
-        const { data } = await axios.post("/api/auth/verify-otp", { email, otp });
-        if (data.success) {
-            toast.success(data.message || "OTP verified");
-        } else {
-            toast.error(data.message || "Invalid OTP");
-        }
-        return data;
-    } catch (error) {
-        toast.error("OTP verification failed");
-        return { success: false };
-    }
-};
-
-
-    // Login user
-    const login = async (state, credentials) => {
+    const sendOtp = async (email) => {
         try {
-            //console.log(`Attempting ${state} with credentials`, credentials);
-            const { data } = await axios.post(`/api/auth/${state}`, credentials);
-            //console.log(`${state} response:`, data);
-
-            if (data.success) {
-                setAuthUser(data.userData);
-                connectSocket(data.userData);
-                axios.defaults.headers.common["token"] = data.token;
-                setToken(data.token);
-                localStorage.setItem("token", data.token);
-                toast.success(data.message);
-            } else {
-                toast.error(data.message);
-            }
+            const { data } = await axios.post("/api/auth/send-otp", { email });
+            data.success ? toast.success(data.message || "OTP sent successfully") : toast.error(data.message || "Failed to send OTP");
+            return data;
         } catch (error) {
-            console.error(`${state} error:`, error.message);
-            toast.error(error.message);
+            toast.error("Error sending OTP");
+            return { success: false };
         }
     };
 
+    // Verify OTP
+    const verifyOtp = async ({ email, otp }) => {
+        try {
+            const { data } = await axios.post("/api/auth/verify-otp", { email, otp });
+            data.success ? toast.success(data.message || "OTP verified") : toast.error(data.message || "Invalid OTP");
+            return data;
+        } catch (error) {
+            toast.error("OTP verification failed");
+            return { success: false };
+        }
+    };
+
+    // Login user (state = login/register)
+const login = async (state, credentials) => {
+  try {
+    const { data } = await axios.post(`/api/auth/${state}`, credentials);
+
+    console.log(`📥 Response after sending credentials for ${state}:`, data);
+
+    if (data.success) {
+      setAuthUser(data.userData);
+      setToken(data.token);
+
+      // Set token globally for all axios requests
+      axios.defaults.headers.common["token"] = data.token;
+
+      console.log("✅ Axios default headers updated with token:", axios.defaults.headers.common);
+
+      // Store token in localStorage
+      console.log("📦 Before storing in localStorage:", localStorage.getItem("token"));
+      localStorage.setItem("token", data.token);
+      console.log("📦 After storing in localStorage:", localStorage.getItem("token"));
+
+      // Connect to socket server using user data
+      connectSocket(data.userData);
+
+      toast.success(data.message);
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    console.error("❌ Login error:", error);
+    toast.error(error.response?.data?.message || error.message);
+  }
+};
+
+
     // Logout user
-    const logout = async () => {
-        console.log("Logging out...");
+    const logout = () => {
+        if (DEBUG) console.log("Logging out...");
         localStorage.removeItem("token");
         setToken(null);
         setAuthUser(null);
         setOnlineUsers([]);
         axios.defaults.headers.common["token"] = null;
+
         if (socket) {
             socket.disconnect();
-            //console.log("Socket disconnected.");
+            setSocket(null);
+            if (DEBUG) console.log("Socket disconnected on logout.");
         }
+
         toast.success("Logged out successfully");
     };
 
-    // Update profile
+    // Update user profile
     const updateProfile = async (body) => {
         try {
-            //console.log("Updating profile with body:", body);
             const { data } = await axios.put("/api/auth/update-profile", body);
-            //console.log("Profile update response:", data);
-
             if (data.success) {
                 setAuthUser(data.user);
                 toast.success("Profile updated successfully");
             }
         } catch (error) {
-            console.error("Profile update error:", error.message);
-            toast.error(error.message);
+            toast.error(error.response?.data?.message || error.message);
         }
     };
 
-    // Connect socket
+    // Connect user socket
     const connectSocket = (userData) => {
-        if (!userData || socket?.connected) {
-            console.log("Socket already connected or userData missing");
-            return;
-        }
-        
-        // Disconnect socket that before creating new one
-        socket?.disconnect();
+        if (!userData || socket?.connected) return;
 
-        //console.log("Connecting socket for user:", userData._id);
+        // Disconnect any existing socket before reconnecting
+        if (socket) {
+            socket.disconnect();
+        }
+
         const newSocket = io(backendUrl, {
-            query: { userId: userData._id }
+            query: { userId: userData._id },
         });
 
         setSocket(newSocket);
 
         newSocket.on("connect", () => {
-            //console.log("Socket connected with ID:", newSocket.id);
+            if (DEBUG) console.log("Socket connected:", newSocket.id);
         });
 
         newSocket.on("getOnlineUsers", (userIds) => {
-            //console.log("Online users:", userIds);
+            if (DEBUG) console.log("Online users received:", userIds);
             setOnlineUsers(userIds);
         });
 
         newSocket.on("disconnect", () => {
-            //console.log("Socket disconnected.");
+            if (DEBUG) console.log("Socket disconnected.");
         });
     };
 
-    // On component mount
+    // Set axios header when token changes
     useEffect(() => {
         if (token) {
             axios.defaults.headers.common["token"] = token;
-            //console.log("Token set in headers:", token);
+        }
+    }, [token]);
+
+    // Initial auth check on mount
+    useEffect(() => {
+        if (token) {
+            axios.defaults.headers.common["token"] = token;
+            if (DEBUG) console.log("Token set on mount:", token);
         }
         checkAuth();
+
+        // Cleanup on unmount
+        return () => {
+            if (socket) {
+                socket.disconnect();
+                setSocket(null);
+            }
+        };
     }, []);
 
     const value = {
@@ -169,7 +181,7 @@ const verifyOtp = async ({ email, otp }) => {
         logout,
         updateProfile,
         sendOtp,
-        verifyOtp
+        verifyOtp,
     };
 
     return (
