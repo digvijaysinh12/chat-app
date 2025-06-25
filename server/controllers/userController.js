@@ -69,10 +69,10 @@ export const verifyOtp = async (req, res) => {
 
 // Signup a new user
 export const signup = async (req, res) => {
-  const { fullName, email, password, bio } = req.body;
+  const { fullName, email, password} = req.body;
 
   try {
-    if (!fullName || !email || !password || !bio) {
+    if (!fullName || !email || !password ) {
       return res.json({ success: false, message: "Missing Details" });
     }
 
@@ -94,7 +94,6 @@ export const signup = async (req, res) => {
 
       user.fullName = fullName;
       user.password = hashedPassword;
-      user.bio = bio;
 
       await user.save();
 
@@ -110,7 +109,6 @@ export const signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      bio,
       isVerified: true,  // Since OTP verified, mark verified
     });
 
