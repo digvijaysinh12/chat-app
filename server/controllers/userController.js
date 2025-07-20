@@ -45,15 +45,8 @@ export const verifyOtp = async (req, res) => {
     if (!otpRecord || otpRecord.otp !== otp || otpRecord.expiresAt < new Date()) {
       return res.json({ success: false, message: "Invalid or expired OTP" });
     }
-
-    // Mark user as verified
-    const user = await User.findOne({ email });
-    if (user) {
-      user.isVerified = true;
       await user.save();
-    } else {
-      // Optionally create user record or prompt signup next
-    }
+
 
     // Optionally delete OTP record after verification
     await Otp.deleteOne({ email });
@@ -79,10 +72,7 @@ export const signup = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user) {
-      // If user exists but not verified, reject signup
-      if (!user.isVerified) {
-        return res.json({ success: false, message: "Email not verified. Please verify OTP before signing up." });
-      }
+
       // If user already signed up (password exists), reject
       if (user.password) {
         return res.json({ success: false, message: "User already exists" });
@@ -108,7 +98,6 @@ export const signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      isVerified: true,  // Since OTP verified, mark verified
     });
 
     const token = generateToken(newUser._id);

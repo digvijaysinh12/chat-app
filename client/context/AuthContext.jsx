@@ -58,7 +58,6 @@ const login = async (state, credentials) => {
   try {
     const { data } = await axios.post(`/api/auth/${state}`, credentials);
 
-    console.log(`📥 Response after sending credentials for ${state}:`, data);
 
     if (data.success) {
       setAuthUser(data.userData);
@@ -67,12 +66,8 @@ const login = async (state, credentials) => {
       // Set token globally for all axios requests
       axios.defaults.headers.common["token"] = data.token;
 
-      console.log("✅ Axios default headers updated with token:", axios.defaults.headers.common);
-
       // Store token in localStorage
-      console.log("📦 Before storing in localStorage:", localStorage.getItem("token"));
       localStorage.setItem("token", data.token);
-      console.log("📦 After storing in localStorage:", localStorage.getItem("token"));
 
       // Connect to socket server using user data
       connectSocket(data.userData);
@@ -90,7 +85,6 @@ const login = async (state, credentials) => {
 
     // Logout user
     const logout = () => {
-        if (DEBUG) console.log("Logging out...");
         localStorage.removeItem("token");
         setToken(null);
         setAuthUser(null);
