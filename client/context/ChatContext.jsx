@@ -33,7 +33,6 @@ export const ChatProvider = ({ children }) => {
       if (data.success) {
         setUsers(data.users);
         setUnseenMessages(data.unseenMessages || {});
-        DEBUG && console.log("Users & unseen loaded:", data);
       }
     } catch (err) {
       toast.error(err.response?.data?.message || err.message);
@@ -93,7 +92,6 @@ export const ChatProvider = ({ children }) => {
   const subscribeToSocketEvents = () => {
     if (!socket || hasSubscribed.current) return;
     hasSubscribed.current = true;
-    DEBUG && console.log("📡 Subscribed to socket");
 
     socket.on("newMessage", (newMessage) => {
       const isForCurrentChat =
@@ -106,10 +104,7 @@ export const ChatProvider = ({ children }) => {
         setMessages((prev) => [...prev, newMessage]);
         axios.put(`/api/messages/mark/${newMessage._id}`).catch(() => {});
       } else {
-
-        audio.play().catch((e) =>
-          DEBUG && console.warn("🔇 Audio play blocked:", e)
-        ); 
+        audio.play().catch(() => {});
         setUnseenMessages((prev) => ({
           ...prev,
           [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1,
@@ -153,12 +148,10 @@ export const ChatProvider = ({ children }) => {
     if (!socket) return;
 
     const handleConnect = () => {
-      DEBUG && console.log("✅ Socket connected");
       subscribeToSocketEvents();
     };
 
     const handleDisconnect = () => {
-      DEBUG && console.log("❌ Socket disconnected");
       unsubscribeFromSocketEvents();
     };
 
@@ -226,8 +219,3 @@ export const ChatProvider = ({ children }) => {
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
-
-
-
-
-

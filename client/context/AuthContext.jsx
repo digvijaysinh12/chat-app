@@ -7,7 +7,6 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
 axios.defaults.baseURL = backendUrl;
 
 export const AuthContext = createContext();
-const DEBUG = true;
 
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem("token"));
@@ -22,7 +21,6 @@ export const AuthProvider = ({ children }) => {
             if (data.success) {
                 setAuthUser(data.user);
                 connectSocket(data.user);
-                if (DEBUG) console.log("User authenticated:", data.user);
             }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message);
@@ -54,34 +52,31 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Login user (state = login/register)
-const login = async (state, credentials) => {
-  try {
-    const { data } = await axios.post(`/api/auth/${state}`, credentials);
+    const login = async (state, credentials) => {
+        try {
+            const { data } = await axios.post(`/api/auth/${state}`, credentials);
 
+            if (data.success) {
+                setAuthUser(data.userData);
+                setToken(data.token);
 
-    if (data.success) {
-      setAuthUser(data.userData);
-      setToken(data.token);
+                // Set token globally for all axios requests
+                axios.defaults.headers.common["token"] = data.token;
 
-      // Set token globally for all axios requests
-      axios.defaults.headers.common["token"] = data.token;
+                // Store token in localStorage
+                localStorage.setItem("token", data.token);
 
-      // Store token in localStorage
-      localStorage.setItem("token", data.token);
+                // Connect to socket server using user data
+                connectSocket(data.userData);
 
-      // Connect to socket server using user data
-      connectSocket(data.userData);
-
-      toast.success(data.message);
-    } else {
-      toast.error(data.message);
-    }
-  } catch (error) {
-    console.error("❌ Login error:", error);
-    toast.error(error.response?.data?.message || error.message);
-  }
-};
-
+                toast.success(data.message);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+        }
+    };
 
     // Logout user
     const logout = () => {
@@ -94,7 +89,6 @@ const login = async (state, credentials) => {
         if (socket) {
             socket.disconnect();
             setSocket(null);
-            if (DEBUG) console.log("Socket disconnected on logout.");
         }
 
         toast.success("Logged out successfully");
@@ -128,18 +122,13 @@ const login = async (state, credentials) => {
 
         setSocket(newSocket);
 
-        newSocket.on("connect", () => {
-            if (DEBUG) console.log("Socket connected:", newSocket.id);
-        });
+        newSocket.on("connect", () => {});
 
         newSocket.on("getOnlineUsers", (userIds) => {
-            if (DEBUG) console.log("Online users received:", userIds);
             setOnlineUsers(userIds);
         });
 
-        newSocket.on("disconnect", () => {
-            if (DEBUG) console.log("Socket disconnected.");
-        });
+        newSocket.on("disconnect", () => {});
     };
 
     // Set axios header when token changes
@@ -153,7 +142,6 @@ const login = async (state, credentials) => {
     useEffect(() => {
         if (token) {
             axios.defaults.headers.common["token"] = token;
-            if (DEBUG) console.log("Token set on mount:", token);
         }
         checkAuth();
 
