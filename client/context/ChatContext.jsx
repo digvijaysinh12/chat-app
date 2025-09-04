@@ -89,8 +89,8 @@ export const ChatProvider = ({ children }) => {
 
   // Listen to socket real-time events
   const subscribeToSocketEvents = () => {
-    if (!socket || hasSubscribed.current) return;
-    hasSubscribed.current = true;
+    if (!socket ) return;
+
 
     socket.on("newMessage", (newMessage) => {
       const isForCurrentChat =
