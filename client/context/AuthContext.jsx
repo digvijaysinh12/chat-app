@@ -5,11 +5,11 @@ import { io } from "socket.io-client";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 axios.defaults.baseURL = backendUrl;
+axios.defaults.withCredentials = true; // Allow cookies to be sent with requests
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [token, setToken] = useState(localStorage.getItem("token"));
     const [authUser, setAuthUser] = useState(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [socket, setSocket] = useState(null);
@@ -58,17 +58,7 @@ export const AuthProvider = ({ children }) => {
 
             if (data.success) {
                 setAuthUser(data.userData);
-                setToken(data.token);
-
-                // Set token globally for all axios requests
-                axios.defaults.headers.common["token"] = data.token;
-
-                // Store token in localStorage
-                localStorage.setItem("token", data.token);
-
-                // Connect to socket server using user data
                 connectSocket(data.userData);
-
                 toast.success(data.message);
             } else {
                 toast.error(data.message);
@@ -79,12 +69,10 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Logout user
-    const logout = () => {
-        localStorage.removeItem("token");
-        setToken(null);
+    const logout = async() => {
+        await axios.post("/api/auth/logout");   // backend clears cooie
         setAuthUser(null);
         setOnlineUsers([]);
-        axios.defaults.headers.common["token"] = null;
 
         if (socket) {
             socket.disconnect();
@@ -131,18 +119,9 @@ export const AuthProvider = ({ children }) => {
         newSocket.on("disconnect", () => {});
     };
 
-    // Set axios header when token changes
-    useEffect(() => {
-        if (token) {
-            axios.defaults.headers.common["token"] = token;
-        }
-    }, [token]);
-
     // Initial auth check on mount
     useEffect(() => {
-        if (token) {
-            axios.defaults.headers.common["token"] = token;
-        }
+
         checkAuth();
 
         // Cleanup on unmount

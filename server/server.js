@@ -6,9 +6,11 @@ import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
+import cookieParser from "cookie-parser"; 
 
 // Create Express app and HTTP server
 const app = express();
+app.use(cookieParser());
 const server = http.createServer(app);
 
 // Initialize socket.io server

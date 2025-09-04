@@ -2,6 +2,7 @@ import express from 'express';
 import {
   checkAuth,
   login,
+  logout,
   sendOtp,
   signup,
   updateProfile,
@@ -21,5 +22,6 @@ userRouter.post("/verify-otp", verifyOtp);      // Verify OTP
 //Protected Routes(Auth Token)
 userRouter.put("/update-profile", protectRoute, updateProfile);  // Update user profile
 userRouter.get("/check", protectRoute, checkAuth);               // Check if token is valid
+userRouter.post("/logout", protectRoute, logout);
 
 export default userRouter;
