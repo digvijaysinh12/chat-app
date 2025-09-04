@@ -29,13 +29,13 @@ const Sidebar = () => {
 
   useEffect(() => {
     getContacts();
-  }, [getContacts, onlineUsers]);
+  }, [onlineUsers]);
 
   useEffect(() => {
     if (input.trim()) {
       getUsers();
     }
-  }, [getUsers, input]);
+  }, [input]);
 
   const handleNavigate = (path) => {
     navigate(path);

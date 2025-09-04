@@ -14,7 +14,6 @@ export const ChatContext = createContext();
 const DEBUG = true;
 
 export const ChatProvider = ({ children }) => {
-  const hasSubscribed = useRef(false);
   const typingTimeouts = useRef({});
 
   const [messages, setMessages] = useState([]);
@@ -139,7 +138,6 @@ export const ChatProvider = ({ children }) => {
       socket.off("newMessage");
       socket.off("typing");
     }
-    hasSubscribed.current = false;
     Object.values(typingTimeouts.current).forEach(clearTimeout);
     typingTimeouts.current = {};
   };
